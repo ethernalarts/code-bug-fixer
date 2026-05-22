@@ -1,0 +1,16 @@
+
+<!-- Output Text boxes -->
+<div class="flex flex-col md:flex-row w-full gap-y-4 md:gap-y-2 md:gap-x-4">
+                        
+    <!-- Corrected Code Textbox -->
+    <textarea  
+        class="w-full py-2 px-4 h-40 border-2 border-stone-400 outline-0 focus:border-stone-500 
+                shadow-md shadow-stone-400" 
+        placeholder="Corrected code will appear here" readonly>{{ corrected_code }}</textarea> 
+    
+    <!-- Error Explanation Textbox -->
+    <textarea 
+        class="w-full py-2 px-4 h-40 border-2 border-stone-400 outline-0 focus:border-stone-500 
+                shadow-md shadow-stone-400" 
+        placeholder="Error explanation will appear here" readonly>{{ error_explained }}</textarea>
+</div>
