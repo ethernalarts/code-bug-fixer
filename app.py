@@ -8,7 +8,7 @@ from openai import OpenAI
 from flask_htmx import HTMX
 from dotenv import load_dotenv
 from flask_hot_reload import HotReload
-from flask import Flask, request, render_template
+from flask import Flask, make_response, request, render_template, redirect, url_for
 
 
 # load environment variables
@@ -111,15 +111,17 @@ def index():
 
 
 @app.route("/submit", methods = ["POST"])
-def submit():
+def submit():    
     fingerprint = get_fingerprint()
-    usage_counter = get_usage_counter(fingerprint)
-
-    if not htmx:
-        return render_template("index.html")    
+    usage_counter = get_usage_counter(fingerprint)    
 
     if usage_counter > 3:
-        return render_template("payment.html")
+        response = make_response("Redirecting...", 200)
+        response.headers["HX-Redirect"] = url_for("payment")
+        return response
+    
+    if not htmx:
+        return render_template("index.html")
 
     code = request.form.get("code")
     error_message = request.form.get("error_message")    
@@ -159,6 +161,10 @@ def submit():
         error_explanation_response = sections[0].strip()
         corrected_code_response = sections[1].strip()
 
+        usage_counter += 1
+        print(usage_counter)
+        update_usage_counter(fingerprint, usage_counter)
+
         return render_template(
             "snippets/textareas.html",
             error_explained=error_explanation_response,
@@ -173,9 +179,30 @@ def submit():
         )  
 
 
-# @app.route("/clear", methods = ["GET"])
-# def clear():
-#     return render_template("snippets/cleartextboxes.xhtml")
+@app.route("/payment", methods = ["GET"])
+def payment():
+    return render_template("payment.html")
+
+
+@app.route("/charge", methods=["POST"])
+def charge():
+    amount = int(request.form["amount"])
+    plan = str(request.form["plan"])
+    customer = stripe.Customer.create(
+        email=request.form["stripeEmail"],
+        source=request.form["stripeToken"]
+    )
+    charge = stripe.Charge.create(
+        customer=customer.id,
+        amount=amount,
+        currency="usd",
+        description="App Charge"
+    )
+    return render_template(
+        "charge.html", 
+        amount=amount, 
+        plan=plan
+    )
 
 
 if __name__ == "__main__":
